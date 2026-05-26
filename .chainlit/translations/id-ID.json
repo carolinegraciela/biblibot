@@ -1,0 +1,257 @@
+{
+    "common": {
+        "actions": {
+            "cancel": "Batal",
+            "confirm": "Konfirmasi",
+            "continue": "Lanjutkan",
+            "goBack": "Kembali",
+            "reset": "Atur Ulang",
+            "submit": "Kirim"
+        },
+        "status": {
+            "loading": "Memuat...",
+            "error": {
+                "default": "Terjadi sebuah kesalahan",
+                "serverConnection": "Tidak dapat terhubung ke server"
+            }
+        }
+    },
+    "auth": {
+        "login": {
+            "title": "Masuk untuk menggunakan aplikasi",
+            "form": {
+                "email": {
+                    "label": "Alamat email",
+                    "required": "Email adalah kolom wajib",
+                    "placeholder": "saya@example.com"
+                },
+                "password": {
+                    "label": "Kata sandi",
+                    "required": "Kata sandi adalah kolom wajib"
+                },
+                "actions": {
+                    "signin": "Masuk"
+                },
+                "alternativeText": {
+                    "or": "Atau"
+                }
+            },
+            "errors": {
+                "default": "Tidak dapat masuk",
+                "signin": "Coba masuk dengan akun yang berbeda",
+                "oauthSignin": "Coba masuk dengan akun yang berbeda",
+                "redirectUriMismatch": "URI pengalihan tidak sesuai dengan konfigurasi aplikasi OAuth",
+                "oauthCallback": "Coba masuk dengan akun yang berbeda",
+                "oauthCreateAccount": "Coba masuk dengan akun yang berbeda",
+                "emailCreateAccount": "Coba masuk dengan akun yang berbeda",
+                "callback": "Coba masuk dengan akun yang berbeda",
+                "oauthAccountNotLinked": "Untuk mengonfirmasi identitas Anda, masuklah dengan akun yang sama seperti yang Anda gunakan sebelumnya",
+                "emailSignin": "Tidak dapat mengirim email",
+                "emailVerify": "Periksa email Anda, email baru telah dikirim",
+                "credentialsSignin": "Gagal masuk. Periksa kembali kebenaran data yang diberikan",
+                "sessionRequired": "Masuk untuk melihat halaman ini"
+            }
+        },
+        "provider": {
+            "continue": "Lanjutkan dengan {{provider}}"
+        }
+    },
+    "chat": {
+        "input": {
+            "placeholder": "Tulis pesan...",
+            "actions": {
+                "send": "Kirim pesan",
+                "stop": "Hentikan aktivitas",
+                "attachFiles": "Lampirkan file"
+            }
+        },
+        "favorites": {
+            "use": "Gunakan pesan favorit",
+            "headline": "Pesan favorit",
+            "remove": "Hapus favorit",
+            "empty": {
+                "title": "Belum ada prompt yang disimpan",
+                "description": "Mulai dengan mengirimkan prompt dan menambahkannya ke favorit atau tambahkan prompt dari obrolan sebelumnya"
+            }
+        },
+        "commands": {
+            "button": "Alat",
+            "changeTool": "Ganti alat",
+            "availableTools": "Alat yang tersedia"
+        },
+        "speech": {
+            "start": "Mulai merekam",
+            "stop": "Berhenti merekam",
+            "connecting": "Menghubungkan..."
+        },
+        "fileUpload": {
+            "dragDrop": "Tarik dan seret file ke sini",
+            "browse": "Jelajahi file",
+            "sizeLimit": "Batas:",
+            "errors": {
+                "failed": "Gagal mengunggah file",
+                "cancelled": "Pengunggahan dibatalkan untuk"
+            },
+            "actions": {
+                "cancelUpload": "Batalkan unggahan",
+                "removeAttachment": "Hapus lampiran"
+            }
+        },
+        "messages": {
+            "status": {
+                "using": "Sedang digunakan",
+                "used": "Telah digunakan"
+            },
+            "actions": {
+                "copy": {
+                    "button": "Salin ke papan klip",
+                    "success": "Tersalin!"
+                }
+            },
+            "feedback": {
+                "positive": "Bermanfaat",
+                "negative": "Tidak bermanfaat",
+                "edit": "Edit umpan balik",
+                "dialog": {
+                    "title": "Tambahkan komentar",
+                    "submit": "Kirim umpan balik",
+                    "yourFeedback": "Umpan balik Anda..."
+                },
+                "status": {
+                    "updating": "Memperbarui",
+                    "updated": "Umpan balik diperbarui"
+                }
+            }
+        },
+        "history": {
+            "title": "Riwayat obrolan",
+            "empty": "Sangat kosong...",
+            "show": "Tampilkan riwayat"
+        },
+        "settings": {
+            "title": "Pengaturan",
+            "customize": "Sesuaikan pengaturan obrolan Anda di sini"
+        },
+        "watermark": "LLM dapat membuat kesalahan. Verifikasi kembali informasi yang penting."
+    },
+    "threadHistory": {
+        "sidebar": {
+            "title": "Obrolan sebelumnya",
+            "filters": {
+                "search": "Cari",
+                "placeholder": "Cari percakapan..."
+            },
+            "timeframes": {
+                "today": "Hari ini",
+                "yesterday": "Kemarin",
+                "previous7days": "7 hari terakhir",
+                "previous30days": "30 hari terakhir"
+            },
+            "empty": "Tidak ada obrolan yang ditemukan",
+            "actions": {
+                "close": "Tutup bilah samping",
+                "open": "Buka bilah samping"
+            }
+        },
+        "thread": {
+            "untitled": "Percakapan tanpa judul",
+            "menu": {
+                "rename": "Ganti nama",
+                "share": "Bagikan",
+                "delete": "Hapus"
+            },
+            "actions": {
+                "share": {
+                    "title": "Bagikan tautan percakapan",
+                    "button": "Bagikan",
+                    "status": {
+                        "copied": "Tautan disalin",
+                        "created": "Tautan berbagi berhasil dibuat!",
+                        "unshared": "Berbagi dinonaktifkan untuk obrolan ini"
+                    },
+                    "error": {
+                        "create": "Tidak dapat membuat tautan berbagi",
+                        "unshare": "Tidak dapat membatalkan pembagian obrolan"
+                    }
+                },
+                "delete": {
+                    "title": "Konfirmasi penghapusan",
+                    "description": "Anda akan menghapus obrolan beserta pesan dan elemen di dalamnya. Tindakan ini tidak dapat dibatalkan.",
+                    "success": "Obrolan dihapus",
+                    "inProgress": "Menghapus obrolan..."
+                },
+                "rename": {
+                    "title": "Ganti nama obrolan",
+                    "description": "Masukkan nama baru untuk percakapan ini",
+                    "form": {
+                        "name": {
+                            "label": "Nama",
+                            "placeholder": "Masukkan nama baru"
+                        }
+                    },
+                    "success": "Nama obrolan berhasil diganti!",
+                    "inProgress": "Mengganti nama obrolan..."
+                }
+            }
+        }
+    },
+    "navigation": {
+        "header": {
+            "chat": "Obrolan",
+            "readme": "Baca Saya",
+            "theme": {
+                "light": "Tema Terang",
+                "dark": "Tema Gelap",
+                "system": "Gunakan tema sistem"
+            }
+        },
+        "newChat": {
+            "button": "Obrolan Baru",
+            "dialog": {
+                "title": "Buat Obrolan Baru",
+                "description": "Apakah Anda yakin ingin membuat obrolan baru? Obrolan saat ini akan ditutup.",
+                "tooltip": "Obrolan Baru"
+            }
+        },
+        "user": {
+            "menu": {
+                "settings": "Pengaturan",
+                "settingsKey": "P",
+                "apiKeys": "Kunci API",
+                "logout": "Keluar"
+            }
+        }
+    },
+    "apiKeys": {
+        "title": "Kunci API diperlukan",
+        "description": "Untuk menggunakan aplikasi ini, kunci API berikut diperlukan. Kunci akan disimpan di penyimpanan lokal (local storage) perangkat Anda.",
+        "success": {
+            "saved": "Penyimpanan berhasil"
+        }
+    },
+    "alerts": {
+        "info": "Info",
+        "note": "Catatan",
+        "tip": "Tips",
+        "important": "Penting",
+        "warning": "Peringatan",
+        "caution": "Perhatian",
+        "debug": "Debug",
+        "example": "Contoh",
+        "success": "Sukses",
+        "help": "Bantuan",
+        "idea": "Ide",
+        "pending": "Tertunda",
+        "security": "Keamanan",
+        "beta": "Beta",
+        "best-practice": "Praktik Terbaik"
+    },
+    "components": {
+        "MultiSelectInput": {
+            "placeholder": "Pilih..."
+        },
+        "Action": {
+            "selected": "Terpilih:"
+        }
+    }
+}
