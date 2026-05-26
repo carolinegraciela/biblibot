@@ -6,7 +6,7 @@ from src.services.LLmService import LLmService
 
 #COMMUNITY
 from langchain_classic.chains import RetrievalQA
-from langchain_community.embeddings import HuggingFaceBgeEmbeddings
+from langchain_huggingface import HuggingFaceEmbeddings
 
 #QUERY REWRITING
 from langchain_core.prompts import PromptTemplate, ChatPromptTemplate, FewShotChatMessagePromptTemplate
@@ -17,7 +17,7 @@ from langchain_core.runnables import RunnablePassthrough
 
 class ChatbotController:
     def __init__(self):
-        self.__embedding_model = HuggingFaceBgeEmbeddings(
+        self.__embedding_model = HuggingFaceEmbeddings(
             model_name = "BAAI/bge-m3",
             model_kwargs = {'device': 'cpu'}
         )
