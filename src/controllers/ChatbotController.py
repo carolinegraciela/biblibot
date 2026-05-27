@@ -126,8 +126,8 @@ class ChatbotController:
 
         return clean_response
 
-    def hyde(self, kueri, chunk_size):
-        template = """Anda adalah ahli teologi dan sejarah Alkitab. Tugas Anda adalah membuat "dokumen hipotetis" BERDASARKAN Alkitab 
+    def hyde(self, kueri):
+        system_template = """Anda adalah ahli teologi dan sejarah Alkitab. Tugas Anda adalah membuat "dokumen hipotetis" BERDASARKAN Alkitab 
         berupa SATU PARAGRAF (4-5 kalimat) yang mendalam untuk menjawab pertanyaan pengguna.
         Paragraf ini akan digunakan oleh mesin pencari untuk mencocokkan makna (semantic search) dengan ayat-ayat Alkitab.
 
@@ -151,14 +151,13 @@ class ChatbotController:
         Dokumen Hipotetis:"""
 
 
-        hyde_prompt = PromptTemplate(
-                    input_variables=["query", "chunk_size"],
-                    template=template
-                )
+        hyde_prompt = ChatPromptTemplate.from_messages([
+            ("system", system_template),
+            ("human", "Pertanyaan: {query}\nDokumen Hipotetis:")    
+        ])
 
         hyde_chain = hyde_prompt | self.llm | StrOutputParser()
-
-        input_variables = {"query": kueri, "chunk_size": str(chunk_size)}
+        input_variables = {"query": kueri} 
         response = hyde_chain.invoke(input_variables)
         print(f"Dokumen hipotesis: {response.strip()}")
 
@@ -194,7 +193,7 @@ class ChatbotController:
         elif "[OUT_OF_DOMAIN]" in rewritten_query:
             return "Maaf, saya adalah chatbot yang didesain untuk membantu pencarian ayat Alkitab secara kontesktual. Apa yang ingin kamu tanyakan?"
         
-        hasil_hyde = self.hyde(rewritten_query, 500)   
+        hasil_hyde = self.hyde(rewritten_query)   
         retrieval_docs = self._retriever.retrieveAnswers(hasil_hyde)
         final_retrieval = self.reranking(rewritten_query, retrieval_docs)
 

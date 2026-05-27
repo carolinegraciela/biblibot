@@ -12,8 +12,6 @@ class LLmService():
     def __init__(self):
         self.__groq_token = os.getenv("GROQ_API")
         self.__reranker_model = os.getenv("RERANKER_MODEL")
-        # self.__hf_token = os.getenv("HF_TOKEN")
-        # self.__llm_model = os.getenv("LLM_MODEL")
 
     def generateResponse(self):
         llm = ChatGroq(
