@@ -63,6 +63,10 @@ class ChatbotController:
             "output": "Daud mengalahkan Goliat orang Filistin menggunakan umban dan batu. maju demi nama TUHAN semesta alam."
         },
         {
+            "input": "ayat tentang 9 buah roh",
+            "output": "Sembilan buah Roh Kudus yang tertulis dalam surat Rasul Paulus kepada jemaat di Galatia. Karakteristik kehidupan orang percaya yang dipimpin oleh Roh Kudus seperti kasih, sukacita, dan damai sejahtera, kesabaran, kemurahan, kebaikan, kesetiaan, kelemahlembutan, penguasaan diri."
+        },
+        {
             "input": "ayat tentang zakheus",
             "output": "zakheus pemungut cukai yang pendek. zakheus memanjat pohon melihat yesus. yesus menginap di rumah zakheus."
         },
@@ -93,7 +97,15 @@ class ChatbotController:
         {
             "input": "asdfghjkl",
             "output": "[GIBBERISH]"
-        }
+        },
+        {
+            "input": "ayat untuk orang yang malas ke gereja",
+            "output": "Nasihat untuk tidak menjauhkan diri dari pertemuan ibadah. Latihan badani ada batasnya, tapi roh tidak. Roh memang penurut tapi daging lemah."
+        },
+        {
+            "input": "ayat untuk orang yang malas baca Alkitab",
+            "output": "Peringatan bagi orang yang tegar tengkuk dan malas mendengarkan perkataan Tuhan. Pentingnya merenungkan Taurat Tuhan siang dan malam agar jalan hidup beruntung. Firman Tuhan sebagai pelita bagi kaki dan terang bagi jalan orang percaya."
+        }        
         ]
 
         example_prompt = ChatPromptTemplate.from_messages([
@@ -110,7 +122,7 @@ class ChatbotController:
         Anda adalah sistem klasifikasi dan penulis ulang kueri (Query Rewriter) untuk chatbot pencarian ayat Alkitab.
         Tugas Anda adalah menganalisis input pengguna dan WAJIB memberikan output berdasarkan hierarki 5 kondisi berikut (Cek dari No. 1 hingga 5):
 
-        1. PERMINTAAN TAFSIR (PRIORITAS UTAMA): HANYA gunakan tag ini jika pengguna secara eksplisit menanyakan makna, arti, maksud, tafsiran, atau penjelasan teologis (misal menggunakan kata kunci: "apa arti", "maksud dari", "jelaskan makna", "artikan", "arti dari", "tafsirkan"). Balas HANYA dengan: [EXEGESIS_REQUEST]
+        1. PERMINTAAN TAFSIR (PRIORITAS UTAMA): HANYA gunakan tag ini jika pengguna secara eksplisit menanyakan makna, arti, maksud, tafsiran, atau penjelasan teologis (misal menggunakan kata kunci: "apa arti", "maksud dari", "jelaskan makna", "artikan kisah ... di kitab ...", "arti dari", "tafsirkan"). Balas HANYA dengan: [EXEGESIS_REQUEST]
            *PANTANGAN KERAS*: Jika pengguna mencari ayat, lokasi pasal, atau menyebutkan suatu peristiwa, mukjizat, dan kisah Alkitab (misal: "cerita yesus memecah2kan 5 roti", "mukjizat air jadi anggur", "ayat tentang kisah Zakheus"), JANGAN PERNAH gunakan tag ini. Kueri yang menceritakan plot/peristiwa untuk dicari ayatnya adalah KUERI VALID, langsung lanjutkan ke No. 5.
         2. GIBBERISH: Jika input adalah ketikan acak, tidak bermakna, atau hanya simbol (misal: "asdfg", "husdbuwiefue"), balas HANYA dengan: [GIBBERISH]
         3. SAPAAN: Jika input murni sapaan, balas HANYA dengan: [GREETING]
@@ -162,6 +174,7 @@ class ChatbotController:
         3. DILARANG KERAS menggunakan gaya bahasa khotbah atau renungan harian (JANGAN gunakan: "Ingatlah saudara-saudara", "Mari kita", "Tuhan ingin kita").
         4. JANGAN tambahkan frasa pengantar seperti "Berfirmanlah Tuhan:" atau "Yesus berkata:", KECUALI inputnya secara eksplisit mencari kisah tokoh. Langsung saja tulis inti pengajarannya.
         5. GUNAKAN KOSAKATA ALKITAB TB (contoh: "Carilah dahulu", "Sebab sesungguhnya", "Kasih karunia", "Kerajaan Allah", "pertemuan ibadah", "Bait Suci").
+        6. JANGAN PERNAH MENGARANG ATAU MENAMBAHKAN DAFTAR ISTILAH ALKITAB JIKA ANDA TIDAK TAHU VERBATIM ASLINYA. Jika input menyebutkan sebagian daftar (seperti buah roh, karunia, hukum), cukup sebutkan bagian yang Anda ketahui pasti dari Alkitab TB atau gunakan kalimat generalisasi Alkitabiah tanpa mengarang kata baru.
 
         ### CONTOH 1 (Topik Moral/Pergumulan):
         Input: mengasihi musuh, amarah, pembalasan adalah hak Tuhan
@@ -182,6 +195,10 @@ class ChatbotController:
         ### CONTOH 5 (Topik Kisah Yesus / Perumpamaan):
         Input: Ayat tentang seorang mempunyai dua anak laki-laki. Anak bungsu yang hilang. Seorang bapa punya anak sulung dan bungsu.
         Dokumen Hipotetis: Ada seorang mempunyai dua anak laki-laki, lalu kata yang bungsu kepada ayahnya: Bapa, berikanlah kepadaku bagian harta milik kita yang menjadi hakku. Setelah anak itu pergi ke negeri yang jauh dan memboroskan harta miliknya, ia menyesal lalu kembali kepada bapanya. Ketika ia masih jauh, ayahnya telah melihatnya, lalu tergeraklah hatinya oleh belas kasihan. Bapa itu berlari merangkul anak yang telah hilang dan didapat kembali itu, serta menyambutnya dengan sukacita.
+        
+        ### CONTOH 6 (Topik Daftar / Karakteristik Rohani):
+        Input: Sembilan buah Roh Kudus yang tertulis dalam surat Rasul Paulus kepada jemaat di Galatia. Karakteristik kehidupan orang percaya yang dipimpin oleh Roh Kudus seperti kasih, sukacita, dan damai sejahtera.
+        Dokumen Hipotetis: Jikalau kita hidup oleh Roh, baiklah hidup kita juga dipimpin oleh Roh. Sebab buah Roh ialah kasih, sukacita, damai sejahtera, .......
         """
 
         hyde_prompt = ChatPromptTemplate.from_messages([
@@ -219,18 +236,28 @@ class ChatbotController:
         print(f"Query hasil rewriting: {rewritten_query}")
 
         if "[GIBBERISH]" in rewritten_query:
-            return "Maaf, saya tidak mengerti pertanyaanmu. Ketik lebih jelas lagi, ya!😊"
+            return "Maaf, saya tidak mengerti pesan yang kamu kirimkan. Bisa tolong ketik ulang dengan lebih jelas? 😊"
         elif "[GREETING]" in rewritten_query:
-            return "Halo, shalom! Saya Biblibot, ada yang bisa dibantu?"
+            return "Halo, shalom! Saya Biblibot, asisten pencarian ayat Alkitab secara kontekstual. Ada topik pergumulan atau kisah Alkitab yang ingin kamu cari hari ini? 🙏"
         elif "[OUT_OF_DOMAIN]" in rewritten_query:
-            return "Maaf, saya adalah chatbot yang didesain untuk membantu pencarian ayat Alkitab secara kontesktual. Bukan untuk penafsiran atau memberi arti. Apa yang ingin kamu tanyakan?"
+            return (
+                "Maaf, saya hanya didesain untuk membantu mencari ayat Alkitab berdasarkan topik atau pergumulan rohani. "
+                "Saya tidak bisa menjawab pertanyaan umum di luar Alkitab seperti resep masakan, tips teknologi, atau pariwisata. "
+                "Silakan ketikkan topik rohani atau masalah yang sedang kamu hadapi ya! ✨"
+            )
         elif "[EXEGESIS_REQUEST]" in rewritten_query:
             return (
                 "Maaf, saya dirancang khusus sebagai asisten mesin pencari ayat secara kontekstual, "
-                "bukan untuk menafsirkan atau memberikan makna teologis pada ayat tertentu.\n\n"
-                "Untuk mendapatkan penjelasan yang mendalam dan akurat mengenai ayat tersebut, "
+                "bukan untuk menafsirkan, menjelaskan makna teologis, atau memberikan arti pada ayat tertentu.\n\n"
+                "Untuk mendapatkan penjelasan yang mendalam dan akurat mengenai tafsiran tersebut, "
                 "saya sangat menyarankan untuk berdiskusi dengan pendeta, pembimbing rohani, atau membaca buku tafsir Alkitab. 🙏\n\n"
                 "Namun, jika kamu ingin mencari ayat-ayat lain dengan *tema serupa*, silakan ketikkan topik pergumulan atau kata kuncinya!"
+            )
+        elif "[KUERI TIDAK VALID" in rewritten_query or not rewritten_query.strip():
+            return (
+                "Maaf, kueri yang kamu masukkan tidak dapat saya proses. "
+                "Pastikan kamu memasukkan topik kehidupan, cerita tokoh Alkitab, atau situasi yang sedang kamu alami "
+                "agar saya bisa mencarikan ayat Alkitab yang tepat untukmu. Silakan coba lagi! 😊"
             )
         
         hasil_hyde = self.hyde(rewritten_query)   
@@ -259,7 +286,7 @@ class ChatbotController:
         ])
 
         chain = prompt | self.llm | StrOutputParser()
-        ringkasan_llm = chain.invoke({"context": final_retrieval, "question": user_query}).strip()
+        ringkasan_llm = chain.invoke({"context": final_retrieval[0], "question": user_query}).strip()
 
         if not ringkasan_llm:
             ringkasan_llm = "Prinsip Alkitab yang sesuai pertanyaan anda dapat dilihat pada referensi ayat berikut:"
