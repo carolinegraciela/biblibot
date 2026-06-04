@@ -1,14 +1,39 @@
-# Welcome to Chainlit! 🚀🤖
+# 📖 Biblibot v1.0
+### *Sistem Chatbot Interaktif Alkitab Terjemahan Baru Berbasis Web*
 
-Hi there, Developer! 👋 We're excited to have you on board. Chainlit is a powerful tool designed to help you prototype, debug and share applications built on top of LLMs.
+**Teknologi:** RAG Approach • LangChain Framework • Llama 3 Model
 
-## Useful Links 🔗
+---
 
-- **Documentation:** Get started with our comprehensive [Chainlit Documentation](https://docs.chainlit.io) 📚
-- **Discord Community:** Join our friendly [Chainlit Discord](https://discord.gg/k73SQ3FyUh) to ask questions, share your projects, and connect with other developers! 💬
+### 🚀 Panduan Ringkas Pengoperasian
 
-We can't wait to see what you create with Chainlit! Happy coding! 💻😊
+Selamat datang! **Biblibot** adalah asisten penelusuran kontekstual (*Knowledge Retrieval*) yang dirancang khusus untuk memetakan bahasa alami manusia ke dalam ayat-ayat Alkitab Terjemahan Baru secara akurat.
 
-## Welcome screen
+Untuk memulai, silakan ketikkan topik, tema khotbah, perasaan, atau situasi spesifik yang sedang Anda alami pada kolom *chat* di bawah, lalu tekan **Enter**.
 
-To modify the welcome screen, edit the `chainlit.md` file at the root of your project. If you do not want a welcome screen, just leave this file empty.
+#### 💡 Contoh Pertanyaan yang Disarankan:
+
+| Kategori Pencarian | Contoh Masukan Pengguna (*Prompt*) |
+| :--- | :--- |
+| **Kondisi Emosional & Jiwa** | *"Saya sedang merasa sangat cemas dan takut akan masa depan, adakah ayat yang menguatkan?"* |
+| **Topik/Tema Spesifik** | *"Berikan saya referensi ayat-ayat Alkitab yang membahas tentang kesetiaan dalam pernikahan."* |
+| **Konteks/Makna Teologis** | *"Tampilkan ayat yang memiliki esensi makna serupa dengan pengorbanan di Yesaya 53."* |
+| **Motivasi & Pengharapan** | *"Ayat Alkitab apa yang cocok dibaca saat seseorang mengalami kegagalan akademis?"* |
+
+---
+
+### ⚠️ Batasan Penting dan Etika Penggunaan Sistem
+
+Biblibot merupakan sistem *chatbot* yang digunakan untuk pencarian ayat secara kontekstual.
+
+> 🛑 **SISTEM INI BUKAN UNTUK:**
+>
+> 1. **Konseling Psikologis/Spiritual Pribadi:** Chatbot tidak bertindak sebagai konselor, pendeta, atau pengganti bimbingan pastoral. Jangan meminta solusi atas konflik personal di luar teks Alkitab.
+> 2. **Perdebatan Doktrin/Dogma Teologi:** Sistem didesain murni untuk *retrieval* teks suci, bukan untuk menganalisis pertentangan teologis antar denominasi atau menafsirkan dogma secara mandiri.
+> 3. **Pencarian Informasi Umum (General Knowledge):** Sistem tidak akan menjawab kueri di luar Alkitab Terjemahan Baru (misal: berita terkini, rumus matematika, atau ramalan cuaca).
+
+---
+
+Biblibot &copy; 2026 • Tugas Akhir Teknik Informatika
+**Dibuat oleh:** Caroline Graciela Harmanto (NIM. 11220249)
+Fakultas Teknologi Informasi • Institut Informatika Indonesia Surabaya

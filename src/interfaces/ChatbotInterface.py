@@ -26,6 +26,7 @@ class ChatbotInterface:
         action_msg = cl.AskActionMessage(
             content = greeting,
             actions = self._menu_actions(),
+            raise_on_timeout = True
         )
         
         menu_messages = cl.user_session.get("menu_messages") or []
@@ -44,7 +45,7 @@ class ChatbotInterface:
         await msg.send()
 
         jawaban = self._controller.generate_response(user_query)    
-        msg.content = f"Hasil Retrieval:\n**{jawaban}**)"
+        msg.content = f"{jawaban}"
 
         await msg.update()
     
@@ -57,7 +58,8 @@ class ChatbotInterface:
         ]
         action_msg = cl.AskActionMessage(
             content="Silakan pilih kategori Alkitab yang ingin Anda baca:",
-            actions=actions
+            actions=actions,
+            raise_on_timeout=True
         )
         menu_messages = cl.user_session.get("menu_messages") or []
         menu_messages.append(action_msg)
@@ -79,7 +81,8 @@ class ChatbotInterface:
         
         action_msg = cl.AskActionMessage(
             content = judul,
-            actions = actions
+            actions = actions,
+            raise_on_timeout=True
         )
         menu_messages = cl.user_session.get("menu_messages") or []
         menu_messages.append(action_msg)
@@ -102,7 +105,8 @@ class ChatbotInterface:
         
         action_msg = cl.AskActionMessage(
             content = judul,
-            actions = actions
+            actions = actions,
+            raise_on_timeout=True
         )
         menu_messages = cl.user_session.get("menu_messages") or []
         menu_messages.append(action_msg)
@@ -126,7 +130,8 @@ class ChatbotInterface:
         
         action_msg = cl.AskActionMessage(
             content = judul,
-            actions = actions
+            actions = actions,
+            raise_on_timeout=True
         )
         menu_messages = cl.user_session.get("menu_messages") or []
         menu_messages.append(action_msg)
@@ -149,7 +154,9 @@ class ChatbotInterface:
         
         action_msg = cl.AskActionMessage(
             content = f"📖 **{kitab} {pasal}:{ayat}**\n\n> {teks}",
-            actions = actions
+            actions = actions,
+            timeout=180,
+            raise_on_timeout=True
         )
         menu_messages = cl.user_session.get("menu_messages") or []
         menu_messages.append(action_msg)
