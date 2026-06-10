@@ -118,9 +118,8 @@ class ChatbotInterface:
         return res
 
     
-    async def showListAyat(self, pasal: int) -> list[int]:
-        daftar_ayat = await self._controller.getDaftarAyat(pasal)
-        
+    async def showListAyat(self, kitab: str, pasal: int) -> list[int]:
+        daftar_ayat = await self._controller.getDaftarAyat(kitab, pasal)
         actions = [
             cl.Action(name="pilih_ayat", payload={"value": ayat}, label=str(ayat)) 
             for ayat in daftar_ayat
@@ -142,8 +141,8 @@ class ChatbotInterface:
             await action_msg.update()
         return res
     
-    async def showTeksAyat(self, ayat: int) -> str:
-        kitab, pasal, ayat, teks = await self._controller.getTeksAyat(ayat)
+    async def showTeksAyat(self, kitab: str, pasal: int, ayat: int) -> str:
+        kitab, pasal, ayat, teks = await self._controller.getTeksAyat(kitab, pasal, ayat)
         actions = [
             cl.Action(
                 name = "kembali_menu", 

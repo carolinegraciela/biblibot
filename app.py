@@ -1,5 +1,6 @@
 import os 
 import time
+import traceback
 
 import chainlit as cl
 from dotenv import load_dotenv
@@ -62,12 +63,14 @@ async def handle_menu(interface):
         res_pasal = await interface.showListPasal(kitab)
         if not res_pasal: return
         pasal = int(res_pasal.get("payload").get("value"))
+        print(f"[CHECKPOINT] Nilai Kitab: '{kitab}' (Tipe: {type(kitab)})")
+        print(f"[CHECKPOINT] Nilai Pasal: '{pasal}' (Tipe: {type(pasal)})")
         
-        res_ayat = await interface.showListAyat(pasal)
+        res_ayat = await interface.showListAyat(kitab, pasal)
         if not res_ayat: return
         ayat = int(res_ayat.get("payload").get("value"))
         
-        res_final = await interface.showTeksAyat(ayat)
+        res_final = await interface.showTeksAyat(kitab, pasal, ayat)
 
         if res_final and res_final.get("payload").get("value") == "kembali":
             await main_menu(interface)
@@ -82,7 +85,6 @@ async def handle_menu(interface):
         if menu_messages:
             last_msg = menu_messages.pop()
             try:
-                # Hapus HANYA pesan terakhir dari layar UI pengguna
                 await last_msg.remove()
             except:
                 pass
@@ -92,7 +94,9 @@ async def handle_menu(interface):
             pesan_cantik = "Wah, waktu memilihmu sudah habis, nih. Yuk mulai ulang dengan mengetik sapaan di kolom chat! ⏳😊"
             await cl.Message(content=pesan_cantik).send()
         else:
-            print(f"[ERROR LOGGER MENU] Terjadi kesalahan: {e}")
+            print(f"[ERROR LOGGER MENU] Tipe Error: {type(e).__name__}")
+            print(f"[ERROR LOGGER MENU] Detail: {repr(e)}")
+            traceback.print_exc()
             pesan_error = "Duh, sistemnya lagi kewalahan nih memuat menu. Coba ulangi lagi, ya! 🙏"
             await cl.Message(content=pesan_error).send()
 

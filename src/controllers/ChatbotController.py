@@ -118,7 +118,7 @@ class ChatbotController:
             examples = examples,
         )
 
-        system_instruction =  """### INSTRUKSI
+        system_instruction =  system_instruction =  """### INSTRUKSI
         Anda adalah sistem klasifikasi dan penulis ulang kueri (Query Rewriter) untuk chatbot pencarian ayat Alkitab.
         Tugas Anda adalah menganalisis input pengguna dan WAJIB memberikan output berdasarkan hierarki 5 kondisi berikut (Cek dari No. 1 hingga 5):
 
@@ -308,8 +308,8 @@ class ChatbotController:
     def getDaftarPasal(self, kitab:str) -> list[int]:
         return self._retriever.requestListPasal(kitab)
     
-    def getDaftarAyat(self, pasal:int) -> list[int]:
-        return self._retriever.requestListAyat(pasal)
+    def getDaftarAyat(self, kitab: str, pasal:int) -> list[int]:
+        return self._retriever.requestListAyat(kitab, pasal)
     
-    def getTeksAyat(self, ayat:int) -> str:
-        return self._retriever.requestTeksAyat(ayat)
+    def getTeksAyat(self, kitab: str, pasal: int, ayat:int) -> str:
+        return self._retriever.requestTeksAyat(kitab, pasal, ayat)
