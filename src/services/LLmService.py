@@ -7,7 +7,6 @@ load_dotenv()
 # Langchain Community Modules
 from langchain_groq import ChatGroq
 from langchain_community.cross_encoders import HuggingFaceCrossEncoder
-from langchain_community.chat_models import ChatOllama
 
 class LLmService():
     def __init__(self):
