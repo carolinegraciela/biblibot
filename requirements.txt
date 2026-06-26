@@ -1,11 +1,9 @@
 chainlit==2.11.1
-langchain_classic==1.0.7
+langchain_classic==1.0.8
 langchain_community==0.4.2
-langchain_core==1.4.0
-langchain_groq==1.1.2
+langchain_core==1.4.8
+langchain_groq==1.1.3
 langchain_huggingface==1.2.2
 pandas==3.0.3
 python-dotenv==1.2.2
 torch==2.5.1
-faiss-cpu
-sentence-transformers

@@ -4,3 +4,4 @@ __pycache__/
 *.pyo
 *.pyd
 .files/
+public/logo_dark.png

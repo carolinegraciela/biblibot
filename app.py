@@ -1,6 +1,5 @@
 import os 
 import time
-import traceback
 
 import chainlit as cl
 from dotenv import load_dotenv
@@ -15,8 +14,8 @@ MENU_TANYA_JAWAB = 1
 
 DATA_PATH = os.getenv("BIBLE_DATA_PATH")
 
-# retriever = BibleRetriever(DATA_PATH)
 controller = ChatbotController()
+pesan_timeout_error = "Wah, waktu memilihmu sudah habis, nih. Yuk mulai ulang dengan mengetik sapaan di kolom chat! ⏳😊"
 
 @cl.on_chat_start
 async def on_chat_start():
@@ -29,26 +28,38 @@ async def on_chat_start():
     await main_menu(interface)
 
 async def main_menu(interface):
+    # max_retries = 3
+    # retries = 0
     while True:
         await interface.clearMenuHistory()
         try:
             res_menu = await interface.showGreeting()
             
-            if res_menu:
-                val = int(res_menu.get("payload").get("value"))
-                
-                if val == MENU_BACA_ALKITAB:
-                    await handle_menu(interface)
-                    break 
-                else:
-                    await cl.Message(content="💬 **Mode Tanya Jawab Aktif.**\nSilakan ketik pertanyaan Anda seputar isi Alkitab di kolom teks bawah ini:").send()
-                    break 
-                    
+            if res_menu is None:
+                break
+            if not res_menu or "payload" not in res_menu:
+                continue
+
+            val = int(res_menu.get("payload").get("value"))
+            
+            if val == MENU_BACA_ALKITAB:
+                await handle_menu(interface)
+                break 
+            else:
+                await cl.Message(content = "💬 **Mode Tanya Jawab Aktif.**\nSilakan ketik pertanyaan Anda seputar isi Alkitab di kolom teks bawah ini:").send()
+                break 
+            
+        except TimeoutError:
+            await cl.Message(content = pesan_timeout_error).send()
+            break
+
         except Exception:
-            menu_messages = cl.user_session.get("menu_messages")
-            last_msg = menu_messages.pop()
-            await last_msg.remove()
-            cl.user_session.set("menu_messages", menu_messages)
+            menu_messages = cl.user_session.get("menu_messages", [])
+            if menu_messages:
+                last_msg = menu_messages.pop()
+                await last_msg.remove()
+                cl.user_session.set("menu_messages", menu_messages)
+            # retries += 1
 
 async def handle_menu(interface):
     try:
@@ -63,8 +74,6 @@ async def handle_menu(interface):
         res_pasal = await interface.showListPasal(kitab)
         if not res_pasal: return
         pasal = int(res_pasal.get("payload").get("value"))
-        print(f"[CHECKPOINT] Nilai Kitab: '{kitab}' (Tipe: {type(kitab)})")
-        print(f"[CHECKPOINT] Nilai Pasal: '{pasal}' (Tipe: {type(pasal)})")
         
         res_ayat = await interface.showListAyat(kitab, pasal)
         if not res_ayat: return
@@ -78,7 +87,6 @@ async def handle_menu(interface):
         print(res_final.get("payload").get("value") if res_final else "No response")
 
     except Exception as e:
-        error_message = str(e).lower()
         menu_messages = cl.user_session.get("menu_messages")
 
         #DELETING THE UNUSED MENU
@@ -90,13 +98,12 @@ async def handle_menu(interface):
                 pass
             cl.user_session.set("menu_messages", menu_messages)
 
-        if "timed out" in error_message or "timeout" in error_message or "no action was taken" in error_message:
-            pesan_cantik = "Wah, waktu memilihmu sudah habis, nih. Yuk mulai ulang dengan mengetik sapaan di kolom chat! ⏳😊"
-            await cl.Message(content=pesan_cantik).send()
+        if "timeout" in type(e).__name__.lower():
+            await cl.Message(content = pesan_timeout_error).send()
         else:
             print(f"[ERROR LOGGER MENU] Tipe Error: {type(e).__name__}")
             print(f"[ERROR LOGGER MENU] Detail: {repr(e)}")
-            traceback.print_exc()
+
             pesan_error = "Duh, sistemnya lagi kewalahan nih memuat menu. Coba ulangi lagi, ya! 🙏"
             await cl.Message(content=pesan_error).send()
 
@@ -116,10 +123,8 @@ async def handle_message(message: cl.Message):
         processing_time = end_time - start_time
         print(f"[PERFORMA] Waktu pemrosesan respons: {processing_time:.4f} detik")
     except Exception as e:
-        error_message = str(e).lower()
-        if "timed out" in error_message or "timeout" in error_message or "no action was taken" in error_message:
-            pesan_cantik = "Wah, waktu kamu habis, nih. Yuk refresh dan ulang session baru! ⏳😊"
-            await cl.Message(content=pesan_cantik).send()
+        if "timeout" in type(e).__name__.lower():
+            await cl.Message(content = pesan_timeout_error).send()
         else:
             print(f"[ERROR LOGGER] Terjadi kesalahan: {e}")
             pesan_error = "Duh, sistemnya lagi sedikit kewalahan nih mencarikan ayat buat kamu. Coba ketik ulang pertanyaannya, ya! 🙏"

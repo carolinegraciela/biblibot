@@ -17,16 +17,17 @@ class ChatbotInterface:
     async def showGreeting(self) -> str:
         greeting = (
             "## ✝️ Selamat datang di **Biblibot**!\n\n"
-            "Saya adalah asisten Alkitab berbasis AI. Saya siap membantu Anda:\n\n"
+            "Saya adalah asisten Alkitab berbasis AI. Saya siap membantu Anda. Yuk, pilih tombol menu di bawah untuk melanjutkan!\n\n"
             "- 📖 **Baca Alkitab Digital** — cari ayat berdasarkan Kitab, Pasal, dan Ayat\n\n"
             "- 🔍 **Tanya Jawab** — ajukan pertanyaan, saya jawab berdasarkan ayat Alkitab\n"
-            "Pilih mode di bawah untuk memulai:"
+            "Yuk, pilih salah satu menu di bawah untuk memulai:"
         )
 
         action_msg = cl.AskActionMessage(
             content = greeting,
             actions = self._menu_actions(),
-            raise_on_timeout = True
+            raise_on_timeout = False,
+            timeout = 30
         )
         
         menu_messages = cl.user_session.get("menu_messages") or []
@@ -37,15 +38,32 @@ class ChatbotInterface:
         if res:
             action_msg.content = f"Dipilih: {res.get('label')}"
             await action_msg.update()
+        elif res is None:
+            action_msg.actions = []
+            action_msg.content = "Wah, waktu memilihmu sudah habis, nih. Yuk mulai ulang di menu baru ⏳😊"
+
+            await action_msg.update()
+            return None 
         return res
+
 
     #-------------------------- MENU 2: TANYA JAWAB BIBLIBOT -------------------------- 
     async def showJawaban(self, user_query: str):
         msg = cl.Message(content=f"🔍 Menganalisis pertanyaan: '{user_query}' ...")
         await msg.send()
 
-        jawaban = self._controller.generate_response(user_query)    
-        msg.content = f"{jawaban}"
+        jawaban = await self._controller.generate_response(user_query, self.session_id)    
+        try:
+            jawaban = await self._controller.generate_response(user_query, self.session_id)    
+            print(f"[DEBUG UI] Tipe data jawaban: {type(jawaban)}")            
+            msg.content = str(jawaban)
+
+            await msg.update()
+            
+        except Exception as e:
+            print(f"[ERROR UI] Gagal mengupdate interface: {str(e)}")
+            msg.content = "Sistemnya kewalahan, nih. Yuk, ulang di sesi baru! 🙏"
+            await msg.update()
 
         await msg.update()
     
@@ -82,7 +100,7 @@ class ChatbotInterface:
         action_msg = cl.AskActionMessage(
             content = judul,
             actions = actions,
-            raise_on_timeout=True
+            raise_on_timeout=True,
         )
         menu_messages = cl.user_session.get("menu_messages") or []
         menu_messages.append(action_msg)
@@ -154,7 +172,7 @@ class ChatbotInterface:
         action_msg = cl.AskActionMessage(
             content = f"📖 **{kitab} {pasal}:{ayat}**\n\n> {teks}",
             actions = actions,
-            timeout=180,
+            timeout = 180,
             raise_on_timeout=True
         )
         menu_messages = cl.user_session.get("menu_messages") or []

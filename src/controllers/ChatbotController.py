@@ -1,3 +1,5 @@
+import asyncio
+
 #CLASS
 from src.services.BibleRetriever import BibleRetriever 
 from src.services.LLmService import LLmService
@@ -10,8 +12,10 @@ from langchain_huggingface import HuggingFaceEmbeddings
 from langchain_core.prompts import ChatPromptTemplate, FewShotChatMessagePromptTemplate
 from langchain_core.output_parsers import StrOutputParser
 
-#CHAIN
-from langchain_core.runnables import RunnablePassthrough
+#MEMORY
+from langchain_core.chat_history import InMemoryChatMessageHistory
+from langchain_core.runnables.history import RunnableWithMessageHistory
+
 
 class ChatbotController:
     def __init__(self):
@@ -23,89 +27,35 @@ class ChatbotController:
         self.llama_service = LLmService()
         self.llm = self.llama_service.generateResponse()
         self.reranker = self.llama_service.rerankerModel()
+        self.store = {}
 
-        self.system_instruction = """
-            Anda adalah ahli teologi Kristen yang menjawab pertanyaan pengguna dengan menggunakan prinsip-prinsip teologis dari AYAT Alkitab referensi yang disediakan. 
-            Tugas Anda adalah memberikan penjelasan teologis yang mendalam, kontekstual, dan sepenuhnya didasarkan pada prinsip-prinsip tersebut.
-
-            Ketentuan Penting:
-            1. HANYA buat SATU paragraf yang terdiri dari 4-5 kalimat. Jangan panjang-panjang.
-            2. Jawablah menggunakan prinsip-prinsip dari AYAT ALKITAB yang diberikan.
-            3. DILARANG KERAS MENGUTIP TEKS AYAT SECARA HARFIAH (literal). Tugas Anda adalah menjelaskan PRINSIP TEOLOGISnya dalam kata-kata Anda sendiri, bukan menyalin teks ayat tersebut.
-            4. DILARANG KERAS mengarang fakta sejarah atau informasi fiktif.
-            5. Jika pertanyaan membahas hal modern (misalnya rokok, internet) yang tidak disebutkan secara harfiah dalam Alkitab, jelaskan bagaimana PRINSIP MORAL/ETIKA dari ayat referensi dapat diterapkan dalam konteks modern tersebut.
-            6. Dalam penjelasan Anda, jangan mengulangi kata-kata dalam ayat secara harfiah. Gunakan sinonim atau penjelasan konseptual.
-            """
-        self.prompt = ChatPromptTemplate.from_messages([
-            ("system", self.system_instruction),
-            ("human", "AYAT ALKITAB REFERENSI (untuk prinsip):\n{context}\n\nPERTANYAAN PENGGUNA: {question}\n\nPENJELASAN PRINSIP TEOLOGIS (dalam 4-5 kalimat, dilarang mengutip teks):") 
-        ])
-        self.generation_chain = self.prompt | self.llm | StrOutputParser()
-
-
+        
     # 2nd MENU: Question-Answering with Biblibot
-    def query_rewriting(self, original_query):
+    def get_session_history(self, session_id: str) -> InMemoryChatMessageHistory: 
+        """Get or create a history"""
+        if session_id not in self.store:
+            self.store[session_id] = InMemoryChatMessageHistory()
+        return self.store[session_id]
+
+    def intent_classification(self, original_query, session_id):
         examples = [
-        {
-            "input": "saya sedang diajak teman saya untuk padel, tapi jamnya berkaitan dengan jam komsel. saya bimbang banget, enaknya gimana ya?",
-            "output": "mengutamakan Kerajaan Allah. pentingnya kesetiaan pada pertemuan ibadah persekutuan. mendahulukan Tuhan di atas kesenangan duniawi dan hobi."
-        },
-        {
-            "input": "saya mau ke bali sama temen2, apakah boleh pakai baju terbuka? adakah ayatnya?",
-            "output": "Pentingnya menjaga kekudusan tubuh sebagai bait Roh Kudus. Panduan berdandan dengan pantas dan sopan bagi orang percaya. Tubuh harus digunakan untuk memuliakan Allah dalam kehidupan sehari-hari."
-        },
-        {
-            "input": "boleh gak pacaran beda agama",
-            "output": "Larangan menjadi pasangan yang tidak seimbang dengan orang yang tidak percaya. terang tidak dapat bersatu dengan gelap. jangan menjadi pasangan yang tidak seimbang dengan orang tidak percaya."
-        },
-        {
-            "input": "ayat yang bahas tentang Daud mengalahkan Goliat",
-            "output": "Daud mengalahkan Goliat orang Filistin menggunakan umban dan batu. maju demi nama TUHAN semesta alam."
-        },
-        {
-            "input": "ayat tentang 9 buah roh",
-            "output": "Sembilan buah Roh Kudus yang tertulis dalam surat Rasul Paulus kepada jemaat di Galatia. Karakteristik kehidupan orang percaya yang dipimpin oleh Roh Kudus seperti kasih, sukacita, dan damai sejahtera, kesabaran, kemurahan, kebaikan, kesetiaan, kelemahlembutan, penguasaan diri."
-        },
-        {
-            "input": "ayat tentang zakheus",
-            "output": "zakheus pemungut cukai yang pendek. zakheus memanjat pohon melihat yesus. yesus menginap di rumah zakheus."
-        },
-        {
-            "input": "orang yang suka tatoan atau tindikan di seluruh badan itu sebenarnya dosa gak sih di mata Tuhan?",
-            "output": "larangan membuat tanda rajah pada kulit. menjaga kekudusan tubuh fisik. memuliakan Allah dengan tubuh."
-        },
-        {
-            "input": "gimana cara bikin nasi goreng jawa?",
-            "output": "[OUT_OF_DOMAIN]"
-        },
-        {
-            "input": "apa makna dari perumpamaan anak yang hilang?",
-            "output": "[EXEGESIS_REQUEST]"
-        },
-        {
-            "input": "arti perumpamaan ...?",
-            "output": "[EXEGESIS_REQUEST]"
-        },
-        {
-            "input": "ayat tentang perumpamaan anak yang hilang?",
-            "output": "Ayat tentang seorang mempunyai dua anak laki-laki. Anak bungsu yang hilang. Seorang bapa punya anak sulung dan bungsu."
-        },
-        {
-            "input": "halo biblibot!",
-            "output": "[GREETING]"
-        },
-        {
-            "input": "asdfghjkl",
-            "output": "[GIBBERISH]"
-        },
-        {
-            "input": "ayat untuk orang yang malas ke gereja",
-            "output": "Nasihat untuk tidak menjauhkan diri dari pertemuan ibadah. Latihan badani ada batasnya, tapi roh tidak. Roh memang penurut tapi daging lemah."
-        },
-        {
-            "input": "ayat untuk orang yang malas baca Alkitab",
-            "output": "Peringatan bagi orang yang tegar tengkuk dan malas mendengarkan perkataan Tuhan. Pentingnya merenungkan Taurat Tuhan siang dan malam agar jalan hidup beruntung. Firman Tuhan sebagai pelita bagi kaki dan terang bagi jalan orang percaya."
-        }        
+            {"input": "ayat Alkitab yang menyatakan bahwa ...", "output": "[VALID_QUERY]"},
+            {"input": "ayat Alkitab ttg Allah Tritunggal", "output": "[VALID_QUERY]"},
+            {"input": "ayat yang menyatakan Yesus adalah Allah", "output": "[VALID_QUERY]"},
+            
+            # --- CONTRASTIVE PAIRING ---
+            {"input": "ayat tentang keselamatan hanya ada dalam yesus", "output": "[VALID_QUERY]"},
+            {"input": "apakah benar keselamatan hanya ada dalam yesus? tolong jelaskan", "output": "[EXEGESIS_REQUEST]"},            
+            {"input": "ayat tentang perumpamaan anak yang hilang", "output": "[VALID_QUERY]"},
+            {"input": "apa makna dari perumpamaan anak yang hilang?", "output": "[EXEGESIS_REQUEST]"},
+            {"input": "arti dari ayat ...?", "output": "[EXEGESIS_REQUEST]"},
+            {"input": "makna perumpamaan ...?", "output": "[EXEGESIS_REQUEST]"},
+
+            # ---------------------------
+
+            {"input": "gimana cara bikin nasi goreng jawa?", "output": "[OUT_OF_DOMAIN]"},
+            {"input": "halo biblibot!", "output": "[GREETING]"},
+            {"input": "asdfghjkl", "output": "[GIBBERISH]"}
         ]
 
         example_prompt = ChatPromptTemplate.from_messages([
@@ -118,87 +68,83 @@ class ChatbotController:
             examples = examples,
         )
 
-        system_instruction =  system_instruction =  """### INSTRUKSI
-        Anda adalah sistem klasifikasi dan penulis ulang kueri (Query Rewriter) untuk chatbot pencarian ayat Alkitab.
-        Tugas Anda adalah menganalisis input pengguna dan WAJIB memberikan output berdasarkan hierarki 5 kondisi berikut (Cek dari No. 1 hingga 5):
+        system_instruction = """### INSTRUKSI
+        Anda adalah sistem klasifikasi Niat Pengguna (Intent Classification) untuk chatbot pencarian ayat.
+        Tugas Anda adalah menganalisis input pengguna dan WAJIB memberikan output SATU TAG SAJA berdasarkan hierarki 5 kondisi berikut:
 
-        1. PERMINTAAN TAFSIR (PRIORITAS UTAMA): HANYA gunakan tag ini jika pengguna secara eksplisit menanyakan makna, arti, maksud, tafsiran, atau penjelasan teologis (misal menggunakan kata kunci: "apa arti", "maksud dari", "jelaskan makna", "artikan kisah ... di kitab ...", "arti dari", "tafsirkan"). Balas HANYA dengan: [EXEGESIS_REQUEST]
-           *PANTANGAN KERAS*: Jika pengguna mencari ayat, lokasi pasal, atau menyebutkan suatu peristiwa, mukjizat, dan kisah Alkitab (misal: "cerita yesus memecah2kan 5 roti", "mukjizat air jadi anggur", "ayat tentang kisah Zakheus"), JANGAN PERNAH gunakan tag ini. Kueri yang menceritakan plot/peristiwa untuk dicari ayatnya adalah KUERI VALID, langsung lanjutkan ke No. 5.
-        2. GIBBERISH: Jika input adalah ketikan acak, tidak bermakna, atau hanya simbol (misal: "asdfg", "husdbuwiefue"), balas HANYA dengan: [GIBBERISH]
-        3. SAPAAN: Jika input murni sapaan, balas HANYA dengan: [GREETING]
-        4. LUAR TOPIK: Jika input MURNI tentang hal duniawi (resep masakan, cuaca, tutorial IT, travel) TANPA meminta pandangan rohani, balas HANYA dengan: [OUT_OF_DOMAIN]. 
-        KECUALI: Jika pengguna menanyakan pandangan Alkitab/ayat terkait aktivitas sehari-hari tersebut (misal: gaya berpakaian, hiburan, hobi), JANGAN gunakan tag ini, melainkan lanjutkan ke No. 5 (KUERI VALID).        
-        5. KUERI VALID (PENCARIAN TOPIK): Jika pengguna membagikan masalah hidup (curhat) atau mencari ayat berdasarkan topik tertentu (BUKAN minta tafsir pasal), ubah kueri menjadi 3 KALIMAT DEKLARATIF TEOLOGIS untuk pencarian semantic search.
-        
-        ### CONTOH OUTPUT UNTUK KONDISI 5 (KUERI VALID):
-        - Input: "pusing nih"
-        Output: Ayat Alkitab tentang ketenangan pikiran dan jiwa dalam menghadapi kesesakan. Janji Tuhan bagi manusia yang sedang memikul beban berat dan stres. Penghiburan dan kekuatan dari Allah saat menghadapi badai hidup.
-        - Input: "apa perbedaan cinta dan nafsu"
-        Output: Definisi kasih sejati yang tulus, sabar, dan tidak mementingkan diri sendiri menurut Alkitab. Peringatan Alkitab mengenai bahaya hawa nafsu kedagingan dan keinginan duniawi. Perbandingan antara kasih agape yang kudus dengan perbuatan daging dalam Galatia 5.
+        1. [EXEGESIS_REQUEST] : Jika pengguna secara eksplisit menanyakan makna, arti, maksud, tafsiran, atau penjelasan teologis (misal: "apa arti", "maksud dari", "tafsirkan"). JANGAN gunakan tag ini jika pengguna murni mencari ayat atau menceritakan peristiwa.
+        2. [GIBBERISH] : Jika input adalah ketikan acak, tidak bermakna, atau hanya simbol (misal: "asdfg").
+        3. [GREETING] : Jika input murni sapaan (halo, pagi, shalom).
+        4. [OUT_OF_DOMAIN] : HANYA gunakan jika input MURNI tentang hal duniawi (tutorial, tanya resep, info pariwisata murni seperti "berapa harga tiket ke bali"). 
+           *PANTANGAN KERAS*: Jika pengguna menanyakan ETIKA, BATASAN MORAL, atau BOLEH/TIDAKNYA suatu aktivitas secara rohani (misal: "boleh gak pakai baju terbuka saat liburan?", "nonton bioskop dosa gak?"), JANGAN gunakan tag ini! Itu adalah [VALID_QUERY].
+        5. [VALID_QUERY] : Jika pengguna membagikan masalah hidup, mencari ayat, menyebutkan nama tokoh, atau meminta solusi rohani.
 
         ### ATURAN MUTLAK
-        Aturan Penting:
-        1. JANGAN PERNAH MENJAWAB PERTANYAAN PENGGUNA ATAU MENAMPILKAN AYAT UTUH DI SINI. Tugas Anda di modul ini HANYA melakukan klasifikasi tag atau melakukan perluasan kueri (query expansion).
-        2. Jika pengguna menyebutkan aktivitas modern, hobi, atau istilah gaul (seperti 'padel', 'komsel', 'nongkrong', 'pacaran'), terjemahkan situasi tersebut ke dalam prinsip teologis dasarnya (misalnya: 'komsel' = persekutuan ibadah, 'padel/nongkrong' = waktu luang/kesenangan hidup) ke dalam 3 kalimat deklaratif tersebut.
-        3. Output HARUS langsung berupa TAG KODE (seperti [GIBBERISH]) atau 3 KALIMAT DEKLARATIF TEOLOGIS. 
-        4. DILARANG MEMBERIKAN PENJELASAN, BASA-BASI, TANDA KUTIP EXTRA, ATAU MENYAPA BALIK PENGGUNA.
-        5. SETIAP KALIMAT HARUS DIAKHIRI DENGAN TITIK (.).
-        6. DILARANG MENGULANG-NGULANG KALIMAT YANG SAMA.
+        - OUTPUT HANYA BOLEH BERUPA SATU TAG KODE DI ATAS. 
+        - DILARANG MEMBERIKAN PENJELASAN, BASA-BASI, ATAU TEKS TAMBAHAN APAPUN.
         """
 
         final_prompt = ChatPromptTemplate.from_messages([
             ("system", system_instruction),
-            few_shot_prompt,                  
+            few_shot_prompt,  
+            ("placeholder", "{chat_history}"),                
             ("human", "{original_query}")    
         ])
 
         model_with_stop = self.llm.bind(stop=["User:", "###", "Human:"])
         
-        query_rewriter = final_prompt | model_with_stop | StrOutputParser()
-        response = query_rewriter.invoke({"original_query": original_query})
+        intent_classifier = final_prompt | model_with_stop | StrOutputParser()
+        history_obj = self.get_session_history(session_id)
+        pesan_riwayat_sebelumnya = history_obj.messages
+
+        response = intent_classifier.invoke({
+            "chat_history": pesan_riwayat_sebelumnya,
+            "original_query": original_query})
 
         clean_response = response.strip()
         return clean_response
 
     def hyde(self, kueri):
         system_template = """### INSTRUKSI
-        Anda adalah mesin penasihat kristiani yang menjawab pertanyaan dan permintaan pengguna BERDASARKAN Alkitab Terjemahan Baru (TB).
-        Input yang Anda terima adalah sekumpulan kata kunci atau ringkasan teologis.
+        Anda adalah mesin pembuat Dokumen Hipotetis (HyDE) untuk mengoptimalkan pencarian semantik (Vector Search) pada Alkitab Terjemahan Baru (TB).
+        Input yang Anda terima adalah kueri mentah dari pengguna (bisa berupa curhatan, bahasa gaul, pertanyaan historis, atau masalah hidup).
 
-        Tugas Anda: Ubah input tersebut menjadi 3-4 KALIMAT PADAT yang GAYA BAHASA, KOSAKATA, dan STRUKTUR KALIMATNYA MENIRU ayat Alkitab asli.
-        Teks ini HARUS "terdengar dan terasa" seperti kutipan langsung dari Alkitab TB, dengan MENGGUNAKAN prinsip Alkitab dan kebenaran kristen.
+        Tugas Anda: Ekstrak inti teologis atau historis dari input tersebut, lalu tulis teks hipotetis yang GAYA BAHASA, KOSAKATA, dan STRUKTUR KALIMATNYA meniru persis ayat Alkitab TB. Teks ini harus seolah-olah disalin langsung dari Alkitab.
 
-        ### ATURAN MUTLAK:
-        1. Jawab HANYA dengan teks hipotetis tersebut. Tanpa awalan, tanpa akhiran, tanpa basa-basi.
-        2. DILARANG KERAS menggunakan kata-kata modern atau non-Alkitabiah (seperti: "hobi", "duniawi", "gereja modern", "komsel", "teologi", "relevan").
-        3. DILARANG KERAS menggunakan gaya bahasa khotbah atau renungan harian (JANGAN gunakan: "Ingatlah saudara-saudara", "Mari kita", "Tuhan ingin kita").
-        4. JANGAN tambahkan frasa pengantar seperti "Berfirmanlah Tuhan:" atau "Yesus berkata:", KECUALI inputnya secara eksplisit mencari kisah tokoh. Langsung saja tulis inti pengajarannya.
-        5. GUNAKAN KOSAKATA ALKITAB TB (contoh: "Carilah dahulu", "Sebab sesungguhnya", "Kasih karunia", "Kerajaan Allah", "pertemuan ibadah", "Bait Suci").
-        6. JANGAN PERNAH MENGARANG ATAU MENAMBAHKAN DAFTAR ISTILAH ALKITAB JIKA ANDA TIDAK TAHU VERBATIM ASLINYA. Jika input menyebutkan sebagian daftar (seperti buah roh, karunia, hukum), cukup sebutkan bagian yang Anda ketahui pasti dari Alkitab TB atau gunakan kalimat generalisasi Alkitabiah tanpa mengarang kata baru.
+        ### ATURAN PERCABANGAN 5W1H (WAJIB DIPATUHI):
+        1. SOLUSI / EKSPLANASI (Masalah Hidup/Curhat/Doktrin): Buat 3-4 kalimat padat bergaya Alkitab TB yang memuat prinsip teologis tegas untuk kueri tersebut.
+        2. FAKTA (Who/Where/When - Siapa/Di mana/Kapan): Jika kueri mencari fakta, daftar nama, atau sejarah (contoh: siapa, sebutkan, di mana), DILARANG KERAS membuat dialog karangan. Buat 1-2 kalimat deklaratif yang LANGSUNG MENYEBUTKAN NAMA TOKOH, LOKASI, ATAU WAKTU secara spesifik, meniru gaya penulisan silsilah atau daftar nama dalam Alkitab.
 
-        ### CONTOH 1 (Topik Moral/Pergumulan):
-        Input: mengasihi musuh, amarah, pembalasan adalah hak Tuhan
-        Dokumen Hipotetis: Kasihilah musuhmu dan berdoalah bagi mereka yang menganiaya kamu. Janganlah kamu sendiri menuntut balas, melainkan berilah tempat kepada murka Allah, sebab ada tertulis: Pembalasan itu adalah hak-Ku. Hendaklah segala kepahitan, kegeraman, dan kemarahan dibuang dari antara kamu.
+        ### ATURAN MUTLAK & ANTI-HALUSINASI:
+        1. Jawab HANYA dengan teks hipotetis. DILARANG KERAS memberikan pengantar (seperti "Ayat yang relevan:", "Mari kita baca").
+        2. TRANSLASI BAHASA MODERN (KAMUS WAJIB): 
+           - "komsel / ibadah / gereja" = "pertemuan ibadah / persekutuan"
+           - "badminton / padel / hobi / nongkrong" = "kesenangan duniawi / perkara dunia" (PANTANGAN: Jangan hubungkan olahraga dengan ayat tentang suami-istri, percabulan, atau hawa nafsu!).
+           - "pacaran beda agama / beda keyakinan" = "pasangan yang tidak seimbang / terang dan gelap" (PANTANGAN: Jangan gunakan ayat tentang kesetaraan manusia dalam Kristus untuk menoleransi hal ini!).
+           - "bos / atasan" = "tuan".
+           - "rokok / merokok / tato / vaping / miras" = "merajah tanda pada kulit / mencemari bait Roh Kudus / diperhamba oleh sesuatu" (PANTANGAN: Fokus pada prinsip kekudusan tubuh sebagai bait Allah dan penguasaan diri. Jangan hubungkan dengan ayat tentang makanan atau binatang najis!).
 
-        ### CONTOH 2 (Topik Prioritas - Berhubungan dengan aktivitas modern):
-        Input: mengutamakan Kerajaan Allah, pentingnya kesetiaan pada pertemuan ibadah persekutuan, mendahulukan Tuhan di atas kesenangan
-        Dokumen Hipotetis: Carilah dahulu Kerajaan Allah dan kebenarannya, maka semuanya itu akan ditambahkan kepadamu. Janganlah kita menjauhkan diri dari pertemuan-pertemuan ibadah kita, seperti dibiasakan oleh beberapa orang, tetapi marilah kita saling menasihati. Sebab barangsiapa yang menjadi sahabat dunia, ia menjadikan dirinya musuh Allah.
+        ### CONTOH PEMROSESAN:
+        Input: "saya sedang diajak teman saya untuk padel, tapi jamnya berkaitan dengan jam komsel. bimbang."
+        Dokumen Hipotetis: Carilah dahulu Kerajaan Allah dan kebenarannya, maka semuanya itu akan ditambahkan kepadamu. Janganlah kita menjauhkan diri dari pertemuan-pertemuan ibadah kita, seperti dibiasakan oleh beberapa orang, tetapi marilah kita saling menasihati.
 
-        ### CONTOH 3 (Topik Kekudusan Tubuh):
-        Input: menjaga kekudusan tubuh, berdandan sopan, bait Roh Kudus
+        Input: "Saya mau ke lombok sama temen2, ke pantainya. Apakah tidak apa-apa untuk pakai pakaian yang terbuka?"
         Dokumen Hipotetis: Muliakanlah Allah dengan tubuhmu, sebab tubuhmu adalah bait Roh Kudus yang diam di dalam kamu. Demikian juga hendaknya perempuan berdandan dengan pantas, dengan sopan dan sederhana.
 
-        ### CONTOH 4 (Topik Kisah Tokoh / Narasi Sejarah):
-        Input: kisah daniel di goa singa, daniel tidak takut pada raja babilon, daniel percaya pada Tuhan yang selalu menyertai
-        Dokumen Hipotetis: Maka dilemparkanlah Daniel ke dalam gua singa atas perintah raja, namun ia tidak gentar terhadap ancaman itu. Sebab ia senantiasa menaruh percaya kepada Allahnya dan tidak berhenti bersujud serta berdoa dengan setia. Lalu Allah mengutus malaikat-Nya untuk mengatupkan mulut singa-singa itu, sehingga tidak ada bahaya menimpa dia karena imannya. Sesungguhnya, Tuhan menyertai orang yang benar dan melepaskan hamba-Nya yang berharap kepada-Nya.
+        Input: "Ada orang yang deketin saya, dan dia tipe saya pol. Tapi dia dari agama berbeda, gimana menurutmu?"
+        Dokumen Hipotetis: Janganlah kamu merupakan pasangan yang tidak seimbang dengan orang-orang yang tak percaya. Sebab persamaan apakah terdapat antara kebenaran dan kedurhakaan? Atau bagaimanakah terang dapat bersatu dengan gelap?
 
-        ### CONTOH 5 (Topik Kisah Yesus / Perumpamaan):
-        Input: Ayat tentang seorang mempunyai dua anak laki-laki. Anak bungsu yang hilang. Seorang bapa punya anak sulung dan bungsu.
-        Dokumen Hipotetis: Ada seorang mempunyai dua anak laki-laki, lalu kata yang bungsu kepada ayahnya: Bapa, berikanlah kepadaku bagian harta milik kita yang menjadi hakku. Setelah anak itu pergi ke negeri yang jauh dan memboroskan harta miliknya, ia menyesal lalu kembali kepada bapanya. Ketika ia masih jauh, ayahnya telah melihatnya, lalu tergeraklah hatinya oleh belas kasihan. Bapa itu berlari merangkul anak yang telah hilang dan didapat kembali itu, serta menyambutnya dengan sukacita.
-        
-        ### CONTOH 6 (Topik Daftar / Karakteristik Rohani):
-        Input: Sembilan buah Roh Kudus yang tertulis dalam surat Rasul Paulus kepada jemaat di Galatia. Karakteristik kehidupan orang percaya yang dipimpin oleh Roh Kudus seperti kasih, sukacita, dan damai sejahtera.
-        Dokumen Hipotetis: Jikalau kita hidup oleh Roh, baiklah hidup kita juga dipimpin oleh Roh. Sebab buah Roh ialah kasih, sukacita, damai sejahtera, .......
+        Input: "Siapakah anak daud yg menjadi raja israel?"
+        Kemudian seluruh jemaat mengakui Salomo, anak Daud, sebagai raja. Mereka mengurapi dia bagi TUHAN menjadi raja menggantikan Daud, ayahnya.
+
+        Input: "siapa saja murid yesus?"
+        Dokumen Hipotetis: Inilah nama kedua belas rasul itu: Pertama Simon yang disebut Petrus dan Andreas saudaranya, dan Yakobus anak Zebedeus dan Yohanes saudaranya, Filipus dan Bartolomeus, Tomas dan Matius pemungut cukai, Yakobus anak Alfeus, dan Tadeus, Simon orang Zelot dan Yudas Iskariot yang mengkhianati Dia.
+
+        Input: "Ayat ttg kisah Abraham mau membunuh Ishak"
+        Allah mencobai Abraham dan berfirman kepadanya agar mempersembahkan Ishak, anak tunggalnya yang dikasihinya, sebagai korban bakaran. Ketika Abraham mengulurkan tangannya dan mengambil pisau untuk menyembelih anaknya, berserulah Malaikat TUHAN dari langit melarangnya.
+
+        Input: "Ayat tentang keselamatan"
+        Sebab karena kasih karunia kamu diselamatkan oleh iman; itu bukan hasil usahamu, tetapi pemberian Allah. Keselamatan tidak ada di dalam siapapun juga selain di dalam Dia. Sebab di bawah kolong langit ini tidak ada nama lain yang diberikan kepada manusia yang olehnya kita dapat diselamatkan.        
         """
 
         hyde_prompt = ChatPromptTemplate.from_messages([
@@ -206,11 +152,19 @@ class ChatbotController:
             ("human", "Input:\n{query}\n\nDokumen Hipotetis:")    
         ])
 
-        hyde_chain = hyde_prompt | self.llm | StrOutputParser()
-        response = hyde_chain.invoke({"query": kueri}).strip()
-        print(f"Dokumen hipotesis: {response.strip()}")
+        try:
+            hyde_chain = hyde_prompt | self.llm | StrOutputParser()
+            response = hyde_chain.invoke({"query": kueri}).strip()
+            
+            if response.lower().startswith("berikut adalah") or response.lower().startswith("tentu"):
+                response = '\n'.join(response.split('\n')[1:]).strip()
 
-        return response.strip()
+            print(f"Dokumen hipotesis: {response}")
+            return response
+            
+        except Exception as e:
+            print(f"[API ERROR] HyDE Generation Failed: {str(e)}")
+            return kueri 
 
     def reranking(self, query: str, retrieved_docs: str, top_n: int = 3):
         sentence_pairs = [[query, doc.page_content] for doc in retrieved_docs]
@@ -231,21 +185,21 @@ class ChatbotController:
             
         return best_docs
 
-    def generate_response(self, user_query: str):
-        rewritten_query = self.query_rewriting(user_query)
-        print(f"Query hasil rewriting: {rewritten_query}")
+    async def generate_response(self, user_query: str, session_id: str):
+        intent_tag = await asyncio.to_thread(self.intent_classification, user_query, session_id)
+        print(f"Query Intention: {intent_tag}")
 
-        if "[GIBBERISH]" in rewritten_query:
+        if "[GIBBERISH]" in intent_tag:
             return "Maaf, saya tidak mengerti pesan yang kamu kirimkan. Bisa tolong ketik ulang dengan lebih jelas? 😊"
-        elif "[GREETING]" in rewritten_query:
+        elif "[GREETING]" in intent_tag:
             return "Halo, shalom! Saya Biblibot, asisten pencarian ayat Alkitab secara kontekstual. Ada topik pergumulan atau kisah Alkitab yang ingin kamu cari hari ini? 🙏"
-        elif "[OUT_OF_DOMAIN]" in rewritten_query:
+        elif "[OUT_OF_DOMAIN]" in intent_tag:
             return (
                 "Maaf, saya hanya didesain untuk membantu mencari ayat Alkitab berdasarkan topik atau pergumulan rohani. "
                 "Saya tidak bisa menjawab pertanyaan umum di luar Alkitab seperti resep masakan, tips teknologi, atau pariwisata. "
                 "Silakan ketikkan topik rohani atau masalah yang sedang kamu hadapi ya! ✨"
             )
-        elif "[EXEGESIS_REQUEST]" in rewritten_query:
+        elif "[EXEGESIS_REQUEST]" in intent_tag:
             return (
                 "Maaf, saya dirancang khusus sebagai asisten mesin pencari ayat secara kontekstual, "
                 "bukan untuk menafsirkan, menjelaskan makna teologis, atau memberikan arti pada ayat tertentu.\n\n"
@@ -253,51 +207,78 @@ class ChatbotController:
                 "saya sangat menyarankan untuk berdiskusi dengan pendeta, pembimbing rohani, atau membaca buku tafsir Alkitab. 🙏\n\n"
                 "Namun, jika kamu ingin mencari ayat-ayat lain dengan *tema serupa*, silakan ketikkan topik pergumulan atau kata kuncinya!"
             )
-        elif "[KUERI TIDAK VALID" in rewritten_query or not rewritten_query.strip():
+        elif "[KUERI TIDAK VALID" in intent_tag or not intent_tag.strip():
             return (
                 "Maaf, kueri yang kamu masukkan tidak dapat saya proses. "
                 "Pastikan kamu memasukkan topik kehidupan, cerita tokoh Alkitab, atau situasi yang sedang kamu alami "
                 "agar saya bisa mencarikan ayat Alkitab yang tepat untukmu. Silakan coba lagi! 😊"
             )
         
-        hasil_hyde = self.hyde(rewritten_query)   
-        retrieval_docs = self._retriever.retrieveAnswers(hasil_hyde)
-        final_retrieval = self.reranking(hasil_hyde, retrieval_docs)
+        hyde = await asyncio.to_thread(self.hyde, user_query)
+        retrieval_docs = await asyncio.to_thread(self._retriever.retrieveAnswers, query=hyde)        
+        final_retrieval = await asyncio.to_thread(self.reranking, query=hyde, retrieved_docs=retrieval_docs)
 
-        system_instruction = """### INSTRUKSI
-        Anda adalah ahli teologi Kristen yang tajam, analitis, dan menjawab secara TEGAS serta EKSKLUSIF berbasis KEBENARAN Alkitab.
-        Tugas Anda adalah menjawab pergumulan pengguna BERDASARKAN ayat Alkitab yang disediakan di konteks.
+        system_instruction = """
+        Anda adalah seorang mentor rohani dan sahabat seiman yang hangat, bijak, namun SANGAT TEGAS dalam memegang prinsip Firman Tuhan. Tugas Anda adalah menjawab masalah pengguna berdasarkan ayat Alkitab yang disajikan dalam konteks.
+
+        ### ATURAN MUTLAK PENYARINGAN KONTEKS & ANTI-HERESY (WAJIB DIPATUHI):
+        1. DILARANG MEMUTARBALIKKAN KONTEKS (CONTEXT TWISTING): Jangan pernah menggunakan ayat tentang keselamatan, kasih karunia, atau kesetaraan rohani (seperti Galatia 3:28) untuk membenarkan kompromi duniawi seperti pacaran beda agama, percabulan, atau dosa lainnya.
+        2. KETAHUI BATASAN AYAT: Jika ayat yang disajikan dalam konteks TIDAK MENDUKUNG perbuatan pengguna secara alkitabiah, Anda WAJIB menegur dengan tegas. Jangan memaksakan ayat agar terdengar "mendukung" atau "menyetujui" keinginan pengguna.
+        3. ANALISIS SITUASI PENGGUNA: Deduksi secara logis fase hidup pengguna.
+        4. BUANG KONTEKS SAMPAH: Anda WAJIB MENGABAIKAN ayat dalam konteks yang secara kata mirip, tetapi salah sasaran secara situasi.
+
+        ### ATURAN GAYA BAHASA & TONE (WAJIB DIPATUHI):
+        1. BERBICARA SEPERTI MANUSIA: Gunakan bahasa sehari-hari yang mengalir, santai, dan penuh empati layaknya sahabat yang sedang *ngobrol* di kedai kopi. 
+        2. DILARANG KERAS MELAKUKAN META-TALK: Jangan pernah membuka kalimat dengan menjelaskan apa yang Anda lakukan. HAPUS SEMUA frasa kaku seperti: "Dalam konteks ini", "Berdasarkan ayat di atas", "Saya menemukan ayat", "Dalam kasus ini". Langsung saja masuk ke inti pembicaraan.
+        3. TEGAS TAPI TIDAK MENGGURU: Sampaikan kebenaran secara lugas (to the point) tanpa terkesan menghakimi, tetapi DILARANG berkompromi dengan pandangan sekuler atau toleransi modern.
+        
+        ### KERANGKA PENJAWABAN 5W1H (TARGET SASARAN MUTLAK):
+        Analisis niat di balik kueri pengguna dan sesuaikan fokus jawaban Anda berdasarkan salah satu dari 3 kategori berikut agar tidak bertele-tele:
+        - FAKTA (Who/Where/When - Siapa/Di mana/Kapan): Jika kueri mencari fakta historis, LANGSUNG sebutkan identitas tokoh, lokasi, atau waktu peristiwa tanpa menceritakan ulang seluruh plotnya.
+        - EKSPLANASI (What/Why - Apa/Mengapa): Jika kueri mencari alasan atau doktrin, FOKUS pada latar belakang teologis, tujuan Allah, atau makna di balik sebuah perintah.
+        - SOLUSI (How - Bagaimana/Curhat): Jika kueri adalah curhatan atau meminta panduan praktis, FOKUS pada langkah nyata, perubahan pola pikir, atau sikap hati yang harus diambil pengguna sesuai prinsip ayat.
+
+        ### ATURAN MUTLAK FORMAT & PANJANG JAWABAN (HARD CONSTRAINT):
+        1. BATASAN PANJANG: Anda WAJIB menjawab TEPAT dalam 3 SAMPAI 4 KALIMAT saja. DILARANG KERAS menulis kalimat ke-5. Jika lebih dari 4 kalimat, Anda gagal menjalankan sistem.
+        2. Jawab langsung ke akar masalah berdasarkan pemetaan 5W1H di atas. DILARANG membuat struktur esai, pembukaan basa-basi, atau penutup bertele-tele.
+        3. REFERENSI NATURAL & TANPA COPY-PASTE: Anda WAJIB mendasarkan setiap solusi pada konteks ayat yang disajikan sistem. Anda diizinkan menyebutkan nama kitab/pasal referensinya dengan gaya bahasa santai (contoh: "Kalau kita ingat teguran Paulus di Galatia...", "Amsal mengingatkan kita bahwa..."), namun DILARANG KERAS menyalin ulang teks ayat tersebut kata per kata. Ekstrak langsung intisari teologisnya.
+        4. GUNAKAN KALIMAT PADAT (STRUKTUR S-P): Setiap kalimat WAJIB langsung menembak ke inti masalah. DILARANG KERAS menggunakan frasa pengisi, kata pengantar, atau kata hubung yang membuang kuota kalimat (HAPUS kata seperti: "Oleh karena itu", "Maka dari itu", "Sebagai sahabat", "Perlu diingat bahwa", "Ketahuilah bahwa"). Pastikan setiap kata bernilai dan memiliki bobot solusi.
 
         ### ATURAN MUTLAK PENYARINGAN KONTEKS (DYNAMIC STATE-AWARENESS):
-        1. ANALISIS SITUASI PENGGUNA: Deduksi secara logis fase hidup, status, atau situasi spesifik yang sedang dialami pengguna berdasarkan pertanyaannya (Contoh: apakah ia sedang lajang, berduka, bekerja, sakit, atau sekadar bertanya prinsip umum).
-        2. BUANG KONTEKS SAMPAH: Sistem pencari mungkin secara tidak sengaja menyertakan ayat yang mirip secara kata, namun salah sasaran secara situasi. Anda WAJIB MENGABAIKAN ayat dalam konteks yang tidak sesuai dengan situasi spesifik pengguna. 
-           - Contoh 1: Jika pengguna bertanya tentang PDKT/Pacaran, abaikan ayat tentang perceraian suami-istri.
-           - Contoh 2: Jika pengguna bertanya masalah bos di tempat kerja, abaikan ayat tentang konflik orang tua dan anak.
-        
-        ### ATURAN MUTLAK KETEGASAN & GAYA BAHASA:
-        3. ALIGNMENT OVERRIDE: JANGAN mencampurkan jawaban dengan pandangan sekuler, saran psikologi populer, kompromi asmara, atau toleransi modern. 
-        4. KETEGASAN: Fokus HANYA pada ayat, pasal, dan kitab yang paling relevan dengan situasi pengguna. Jawab dengan tegas, lugas, dan tegak lurus pada prinsip firman tanpa kompromi.
-        5. STRUKTUR: Jawab dalam 1 paragraf padat (4-5 kalimat). Sampaikan dengan penuh kasih namun objektif. DILARANG mengutip ulang isi ayat secara harfiah (tugasmu HANYA memberi penjelasan prinsipnya).
-        """
+        1. ANALISIS SITUASI PENGGUNA: Deduksi secara logis fase hidup atau situasi spesifik pengguna berdasarkan pertanyaannya (lajang, berduka, bekerja, dsb).
+        2. BUANG KONTEKS SAMPAH: Anda WAJIB MENGABAIKAN ayat dalam konteks yang secara kata mirip, tetapi salah sasaran secara situasi (Contoh: masalah bos di kantor jangan dijawab pakai ayat konflik orang tua-anak). Fokus HANYA pada ayat yang disajikan yang relevan dengan 5W1H pengguna.
+        """        
         
         prompt = ChatPromptTemplate.from_messages([
             ("system", system_instruction),
+            ("placeholder", "{chat_history}"),
             ("human", "Ayat Alkitab:\n{context}\n\nPERTANYAAN PENGGUNA: {question}\n\nKALIMAT PENGANTAR JAWABAN:")        
         ])
 
         chain = prompt | self.llm | StrOutputParser()
-        ringkasan_llm = chain.invoke({"context": final_retrieval[0], "question": user_query}).strip()
+        memory_chain = RunnableWithMessageHistory(
+            runnable = chain,
+            get_session_history = self.get_session_history,
+            input_messages_key = "question",
+            history_messages_key = "chat_history"
+        )
 
-        if not ringkasan_llm:
-            ringkasan_llm = "Prinsip Alkitab yang sesuai pertanyaan anda dapat dilihat pada referensi ayat berikut:"
-        jawaban_final = f"{ringkasan_llm}\n\n"
-        jawaban_final += "Berikut adalah referensi ayat yang relevan:\n"
+        ringkasan_llm = await memory_chain.ainvoke({"context": final_retrieval, 
+                                      "question": user_query},
+                                      config = {"configurable": {"session_id": session_id}}
+                                      )
+        ringkasan_llm = ringkasan_llm.strip()
 
+        jawaban_final = ""
         for doc in final_retrieval:
             sumber = doc.metadata.get('sumber', '-')
             isi_ayat = doc.page_content
             jawaban_final += f"- **{sumber}**: \"{isi_ayat}\"\n"
             jawaban_final += "\n"
+
+        if not ringkasan_llm:
+            ringkasan_llm = "Prinsip Alkitab yang sesuai pertanyaan anda dapat dilihat pada referensi ayat berikut:"
+        jawaban_final += f"{ringkasan_llm}\n\n"
 
         return jawaban_final
 
