@@ -38,19 +38,9 @@ class BibleRetriever:
         
         return kitab, pasal, ayat, isi_ayat
 
-    def retrieveAnswers(self, query: str):
-        # search_kwargs = {"k": 3}
-        # if metadata_filters:
-        #     search_kwargs["filter"] = {
-        #         "sumber": {"$in": metadata_filters}
-        #     }
-        
+    def retrieveAnswers(self, query: str):        
         try:
-            docs = self.vectorstore.similarity_search(query, 5)            
-            # if len(docs) == 0:
-            #     print("Filter metadata terlalu ketat/salah tebak. Fallback ke semantik murni.")
-            # docs = self.vectorstore.similarity_search(query, k=3)
-                
+            docs = self.vectorstore.similarity_search(query, 5)                            
             return docs
             
         except Exception as e:

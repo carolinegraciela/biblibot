@@ -52,7 +52,6 @@ class ChatbotInterface:
         msg = cl.Message(content=f"🔍 Menganalisis pertanyaan: '{user_query}' ...")
         await msg.send()
 
-        jawaban = await self._controller.generate_response(user_query, self.session_id)    
         try:
             jawaban = await self._controller.generate_response(user_query, self.session_id)    
             print(f"[DEBUG UI] Tipe data jawaban: {type(jawaban)}")            

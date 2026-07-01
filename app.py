@@ -108,8 +108,38 @@ async def handle_menu(interface):
             await cl.Message(content=pesan_error).send()
 
 #----------------------MESSAGE HANDLER-------------------------
+# @cl.on_message
+# async def handle_message(message: cl.Message):
+#     interface = cl.user_session.get("interface")
+
+#     if cl.user_session.get("chat_history") is None:
+#         cl.user_session.set("chat_history", "")
+#     history_sekarang = cl.user_session.get("chat_history")
+    
+#     try:
+#         start_time = time.perf_counter()
+#         await interface.showJawaban(message.content)
+#         end_time = time.perf_counter()
+#         processing_time = end_time - start_time
+#         print(f"[PERFORMA] Waktu pemrosesan respons: {processing_time:.4f} detik")
+#     except Exception as e:
+#         if "timeout" in type(e).__name__.lower():
+#             await cl.Message(content = pesan_timeout_error).send()
+#         else:
+#             print(f"[ERROR LOGGER] Terjadi kesalahan: {e}")
+#             pesan_error = "Duh, sistemnya lagi sedikit kewalahan nih mencarikan ayat buat kamu. Coba ketik ulang pertanyaannya, ya! 🙏"
+#             await cl.Message(content=pesan_error).send()
+
+
+#----------------------MESSAGE HANDLER-------------------------
 @cl.on_message
 async def handle_message(message: cl.Message):
+    if cl.user_session.get("is_processing"):
+        await cl.Message(content="Tunggu sebentar ya, aku masih memproses pertanyaanmu sebelumnya... ⏳").send()
+        return
+
+    cl.user_session.set("is_processing", True)
+    
     interface = cl.user_session.get("interface")
 
     if cl.user_session.get("chat_history") is None:
@@ -118,15 +148,21 @@ async def handle_message(message: cl.Message):
     
     try:
         start_time = time.perf_counter()
+        
         await interface.showJawaban(message.content)
+        
         end_time = time.perf_counter()
         processing_time = end_time - start_time
         print(f"[PERFORMA] Waktu pemrosesan respons: {processing_time:.4f} detik")
+        
     except Exception as e:
         if "timeout" in type(e).__name__.lower():
-            await cl.Message(content = pesan_timeout_error).send()
+            await cl.Message(content=pesan_timeout_error).send()
         else:
             print(f"[ERROR LOGGER] Terjadi kesalahan: {e}")
             pesan_error = "Duh, sistemnya lagi sedikit kewalahan nih mencarikan ayat buat kamu. Coba ketik ulang pertanyaannya, ya! 🙏"
             await cl.Message(content=pesan_error).send()
+            
+    finally:
+        cl.user_session.set("is_processing", False)
 
