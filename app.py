@@ -15,7 +15,7 @@ MENU_TANYA_JAWAB = 1
 DATA_PATH = os.getenv("BIBLE_DATA_PATH")
 
 controller = ChatbotController()
-pesan_timeout_error = "Wah, waktu memilihmu sudah habis, nih. Yuk mulai ulang dengan mengetik sapaan di kolom chat! ⏳😊"
+pesan_timeout_error = "Wah, waktu memilihmu sudah habis, nih. Yuk mulai ulang dengan memuat sesi baru! ⏳😊"
 
 @cl.on_chat_start
 async def on_chat_start():
