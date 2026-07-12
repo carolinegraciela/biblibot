@@ -154,6 +154,8 @@ async def handle_message(message: cl.Message):
         end_time = time.perf_counter()
         processing_time = end_time - start_time
         print(f"[PERFORMA] Waktu pemrosesan respons: {processing_time:.4f} detik", flush=True)
+        with open("performa_inferensi.txt", "a") as f:
+            f.write(f"[PERFORMA] Waktu pemrosesan: {processing_time:.4f} detik\n")
         
     except Exception as e:
         if "timeout" in type(e).__name__.lower():
