@@ -153,7 +153,7 @@ async def handle_message(message: cl.Message):
         
         end_time = time.perf_counter()
         processing_time = end_time - start_time
-        print(f"[PERFORMA] Waktu pemrosesan respons: {processing_time:.4f} detik")
+        print(f"[PERFORMA] Waktu pemrosesan respons: {processing_time:.4f} detik", flush=True)
         
     except Exception as e:
         if "timeout" in type(e).__name__.lower():
