@@ -14,8 +14,6 @@ class LLmService():
         self.__groq_token_2 = os.getenv("GROQ_API_2")
         self.__groq_token_3 = os.getenv("GROQ_API_3")
         self.__groq_token_4 = os.getenv("GROQ_API_4")        
-
-        # self.ip_vps = "187.77.119.65"
         self.__reranker_model = os.getenv("RERANKER_MODEL")
 
     def generateResponse(self):
